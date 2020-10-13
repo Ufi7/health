@@ -1,5 +1,7 @@
 package com.fc.exch.model;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -174,6 +176,10 @@ public class DetailInfo {
 	@Column(name="c_dept_code")
     private String deptCode;
 
+	//
+	@Column(name="c_insert_time")
+	private Date insertTime;
+	
 	public String getDetailInfoId() {
 		return detailInfoId;
 	}
@@ -476,6 +482,14 @@ public class DetailInfo {
 
 	public void setDeptCode(String deptCode) {
 		this.deptCode = deptCode;
+	}
+
+	public Date getInsertTime() {
+		return insertTime;
+	}
+
+	public void setInsertTime(Date insertTime) {
+		this.insertTime = insertTime;
 	}
 
 }
