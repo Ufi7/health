@@ -7,7 +7,7 @@ import java.util.Map;
 import com.fc.core.model.PagedList;
 import com.fc.exch.model.Exchange;
 import com.fc.exch.model.ExchangeDetail;
-import com.fc.exch.model.Patient;
+import com.fc.exch.model.Patient0;
 
 public interface ExchangeService {
 	
@@ -29,9 +29,9 @@ public interface ExchangeService {
 	
 	public Object updateExchangeDetailItem(String exchangeId, String exchangeDetailId, String[] field, String[] value);
 	
-	public Patient getPatienByZYH(String c_zyh);
+	public Patient0 getPatienByZYH(String c_zyh);
 	
-	public ExchangeDetail newExchangeDetail(String exchangeId, Patient p, String c_dept_code);
+	public ExchangeDetail newExchangeDetail(String exchangeId, Patient0 p, String c_dept_code);
 	
 	public Object updateStatis(String exchangeId);
 	

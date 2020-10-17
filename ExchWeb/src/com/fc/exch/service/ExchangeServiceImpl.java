@@ -17,7 +17,7 @@ import com.fc.core.model.PagedList;
 import com.fc.exch.model.ExConstants;
 import com.fc.exch.model.Exchange;
 import com.fc.exch.model.ExchangeDetail;
-import com.fc.exch.model.Patient;
+import com.fc.exch.model.Patient0;
 
 import bsh.org.objectweb.asm.Constants;
 @Service
@@ -135,19 +135,19 @@ public class ExchangeServiceImpl implements ExchangeService {
 	}
 
 	@Override
-	public Patient getPatienByZYH(String c_zyh) {
+	public Patient0 getPatienByZYH(String c_zyh) {
 		String hql = "From Patient p where p.c_zyh = ?";
 		List list =  hdao.queryHql(hql, c_zyh);
 		if(list.size()==0){
 			return null;
 		}else{
-			return (Patient)list.get(0);
+			return (Patient0)list.get(0);
 		}
 		
 	}
 
 	@Override
-	public ExchangeDetail newExchangeDetail(String exchangeId, Patient p, String c_dept_code) {
+	public ExchangeDetail newExchangeDetail(String exchangeId, Patient0 p, String c_dept_code) {
 		ExchangeDetail ed = new ExchangeDetail();
 		ed.setPatient(p);
 		if(StringUtils.isNotEmpty(p.getC_ybmid())){
@@ -261,7 +261,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 			List<ExchangeDetail> edList = getExchangeDetailListByExchangeId(exchangeId);
 			for(ExchangeDetail ed:edList){
 				ed.setC_status(ExConstants.EXCHANGE_STATUS_SUBMITTED_10);
-				Patient p = ed.getPatient();
+				Patient0 p = ed.getPatient();
 				if(ed.getC_sw()>0 || ed.getC_cy()>0){
 					//死亡 或 出院 关闭状态
 					p.setC_gbbz(1);
@@ -293,7 +293,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 //		String hql = "From ExchangeDetailWithDate ed where ed.patient.patientId = ? and ed.c_status=? ORDER BY ed.c_exch_id.c_jbrq DESC";
 //		return hdao.queryHql(hql, patientId, ExConstants.EXCHANGE_STATUS_SUBMITTED_10);
 		
-		Patient p = hdao.getEntity(Patient.class, patientId);
+		Patient0 p = hdao.getEntity(Patient0.class, patientId);
 		if(p == null){
 			return null;
 		}
