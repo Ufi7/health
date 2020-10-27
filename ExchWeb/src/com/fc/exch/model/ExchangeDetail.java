@@ -1,5 +1,7 @@
 package com.fc.exch.model;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -447,7 +449,20 @@ public class ExchangeDetail implements Cloneable{
 	@Column(name="c_dept_code")
     private String c_dept_code;
 	
-	 @Override  
+	@Column(name="c_insert_time")
+	private Date c_insert_time;
+	
+	
+	
+	 public Date getC_insert_time() {
+		return c_insert_time;
+	}
+
+	public void setC_insert_time(Date c_insert_time) {
+		this.c_insert_time = c_insert_time;
+	}
+
+	@Override  
 	    public Object clone() {  
 		 ExchangeDetail exd = null;  
 	        try{  

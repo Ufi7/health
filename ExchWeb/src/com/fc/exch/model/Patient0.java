@@ -113,6 +113,17 @@ public class Patient0 implements Serializable{
     
     @Column(name="c_gbbz")
     private int c_gbbz;
+    
+    @Column(name="c_yblx")
+	private String c_yblx;
+
+	public String getC_yblx() {
+		return c_yblx;
+	}
+
+	public void setC_yblx(String c_yblx) {
+		this.c_yblx = c_yblx;
+	}
 
 	public String getPatientId() {
 		return patientId;
