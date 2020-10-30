@@ -30,8 +30,8 @@ public class ExchangeServiceImpl implements ExchangeService {
 	@Override
 	public PagedList getExchangeList(PagedList pl, String dept_sys_code) {
 		
-		String sql = "SELECT t_exchange.c_exch_id, t_exchange.c_jbrq, t_exchange.c_jbhs,t_exchange.c_jbhs2, concat(t_exchange.c_yybrs, '/', t_exchange.c_xybrs), t_exchange.c_swbrs,  concat(t_exchange.c_bwrs, '/', t_exchange.c_bzrs), t_exchange.c_yjhl, concat(t_exchange.c_ssbr, '/', t_exchange.c_nssbr), t_exchange.c_qfyj,  t_exchange.c_zdtt, t_exchange.c_gcjlgj, concat(t_exchange.c_tsjc,'/',t_exchange.c_tszl), t_exchange.c_fyc, t_exchange.c_sjmzg, t_exchange.c_wjzbg, t_exchange.c_dcnyx, t_exchange.c_blsj,t_exchange.c_status, t_exchange.c_jbhsid, t_exchange.c_jbhsid2 FROM health_data.t_exchange where c_dept_code in (select c_dept_id from t_dept where INSTR ( c_sys_code , '"+dept_sys_code+"') > 0) ORDER BY t_exchange.c_jbrq DESC";
-		String csql = "SELECT count(*) FROM health_data.t_exchange where c_dept_code in (select c_dept_id from t_dept where INSTR ( c_sys_code , '"+dept_sys_code+"') > 0)";
+		String sql = "SELECT t_exchange.c_exch_id, t_exchange.c_jbrq, t_exchange.c_jbhs,t_exchange.c_jbhs2, concat(t_exchange.c_yybrs, '/', t_exchange.c_xybrs), t_exchange.c_swbrs,  concat(t_exchange.c_bwrs, '/', t_exchange.c_bzrs), t_exchange.c_yjhl, concat(t_exchange.c_ssbr, '/', t_exchange.c_nssbr), t_exchange.c_qfyj,  t_exchange.c_zdtt, t_exchange.c_gcjlgj, concat(t_exchange.c_tsjc,'/',t_exchange.c_tszl), t_exchange.c_fyc, t_exchange.c_sjmzg, t_exchange.c_wjzbg, t_exchange.c_dcnyx, t_exchange.c_blsj,t_exchange.c_status, t_exchange.c_jbhsid, t_exchange.c_jbhsid2 FROM t_exchange where c_dept_code in (select c_dept_id from t_dept where INSTR ( c_sys_code , '"+dept_sys_code+"') > 0) ORDER BY t_exchange.c_jbrq DESC";
+		String csql = "SELECT count(*) FROM t_exchange where c_dept_code in (select c_dept_id from t_dept where INSTR ( c_sys_code , '"+dept_sys_code+"') > 0)";
 		return hdao.getPagedListSql(csql, sql, pl);
 	}
 
@@ -78,6 +78,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 					continue;
 				}
 				ExchangeDetail newexd = (ExchangeDetail)exd.clone();
+				newexd.setC_insert_time(new Date());
 				if(newexd.getC_zr()>0){
 					newexd.setC_zr(0);
 				}
@@ -112,8 +113,8 @@ public class ExchangeServiceImpl implements ExchangeService {
 	@Override
 	public PagedList getSelectablePatientList(PagedList pl, String dept_code, String exchangeId) {
 		// TODO Auto-generated method stub
-		String sql = "select p.c_zyh, p.c_ch, p.c_zyh, p.c_brxm, p.c_xb, p.c_brzt, p.c_ybmid from health_data.t_patient p where p.c_gbbz = 0 and p.c_bmid='"+ dept_code +"' and p.c_zyh not in (select c_zyh from t_detail_info where c_exch_id = '"+ exchangeId +"') ORDER BY p.c_ch ASC";
-		String csql = "SELECT count(*) from health_data.t_patient p where p.c_gbbz = 0 and p.c_bmid='"+ dept_code+"' and p.c_zyh not in (select c_zyh from t_detail_info where c_exch_id = '"+ exchangeId +"')";
+		String sql = "select p.c_zyh, p.c_ch, p.c_zyh, p.c_brxm, p.c_xb, p.c_brzt, p.c_ybmid from t_patient p where p.c_gbbz = 0 and p.c_bmid='"+ dept_code +"' and p.c_zyh not in (select c_zyh from t_detail_info where c_exch_id = '"+ exchangeId +"') ORDER BY p.c_ch ASC";
+		String csql = "SELECT count(*) from t_patient p where p.c_gbbz = 0 and p.c_bmid='"+ dept_code+"' and p.c_zyh not in (select c_zyh from t_detail_info where c_exch_id = '"+ exchangeId +"')";
 		return hdao.getPagedListSql(csql, sql, pl);
 	}
 
@@ -136,7 +137,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 
 	@Override
 	public Patient0 getPatienByZYH(String c_zyh) {
-		String hql = "From Patient p where p.c_zyh = ?";
+		String hql = "From Patient0 p where p.c_zyh = ?";
 		List list =  hdao.queryHql(hql, c_zyh);
 		if(list.size()==0){
 			return null;
@@ -149,6 +150,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 	@Override
 	public ExchangeDetail newExchangeDetail(String exchangeId, Patient0 p, String c_dept_code) {
 		ExchangeDetail ed = new ExchangeDetail();
+		ed.setC_insert_time(new Date());
 		ed.setPatient(p);
 		if(StringUtils.isNotEmpty(p.getC_ybmid())){
 			ed.setC_zr(1);

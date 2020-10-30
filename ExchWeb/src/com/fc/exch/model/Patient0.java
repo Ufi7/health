@@ -28,7 +28,7 @@ public class Patient0 implements Serializable{
 	private Date c_csrq;
     
 	@Column(name="c_xb")
-    private int c_xb;
+    private String c_xb;
     
     @Column(name="c_lxr")
     private String c_lxr;
@@ -165,11 +165,11 @@ public class Patient0 implements Serializable{
 		this.c_csrq = c_csrq;
 	}
 
-	public int getC_xb() {
+	public String getC_xb() {
 		return c_xb;
 	}
 
-	public void setC_xb(int c_xb) {
+	public void setC_xb(String c_xb) {
 		this.c_xb = c_xb;
 	}
 
