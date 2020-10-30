@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -205,7 +207,7 @@ public class ExchangeController {
 		return retObject;
 	}
 	
-	@RequestMapping(value="addPatient/{exchangeId}.do", method=RequestMethod.POST)
+	@RequestMapping(value="addpatient/{exchangeId}.do", method=RequestMethod.POST)
 	@ResponseBody
 	public ExchangeDetail addPatientToExchange(HttpServletRequest request, @RequestBody Map<String, String> map,@PathVariable("exchangeId") String exchangeId) throws Exception{
 		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
@@ -221,6 +223,54 @@ public class ExchangeController {
 		thread.start();
 		
 		return ed;
+	}
+	
+	@RequestMapping(value="addpatientbych/{exchangeId}.do", method=RequestMethod.POST)
+	@ResponseBody
+	public Object addPatientByCH(HttpServletRequest request, @RequestBody Map<String, String> map,@PathVariable("exchangeId") String exchangeId) throws Exception{
+		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
+		String c_ch = map.get("c_ch");
+		Pattern pattern1 = Pattern.compile("^[\\d\\,]*\\d$");
+		Matcher isPattern1 = pattern1.matcher(c_ch);
+		Pattern pattern2 = Pattern.compile("^\\d-\\d$");
+		Matcher isPattern2 = pattern2.matcher(c_ch);
+		String sql_parameter = "";
+		int input_count = 0;
+		Map retmap = new HashMap(); 
+		if(isPattern1.matches()){
+			String[] ids = c_ch.split(",");
+			for(String str:ids){
+				sql_parameter = sql_parameter+"'"+str+"',";
+				input_count++;
+			}
+			
+		}else if(isPattern2.matches()){
+			String[] range = c_ch.split("-");
+			int start =  Integer.parseInt(range[0]);
+			int end = Integer.parseInt(range[1]);
+			for(int i=start;i<=end;i++){
+				sql_parameter = sql_parameter +"'"+i+"',";
+				input_count++;
+			}
+		}else{
+			throw new Exception("格式输入有误.....");
+		}
+		
+		if(input_count>0){
+			sql_parameter = sql_parameter.substring(0, sql_parameter.length()-1);
+			input_count = exchangeService.addPatientByChList(ui.getDeptId(),sql_parameter,exchangeId);
+			retmap.put("count", input_count);
+		}else{
+			throw new Exception("格式输入有误.....");
+		}
+		
+		//refresh statis
+		if(input_count>0){
+			RefreshExchangeStatisThread thread = new RefreshExchangeStatisThread(exchangeService, exchangeId);
+			thread.start();
+		}
+		
+		return retmap;
 	}
 	
 //	@RequestMapping(value="updatestatis/{exchangeId}.do", method=RequestMethod.POST)

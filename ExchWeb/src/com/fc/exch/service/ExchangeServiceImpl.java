@@ -339,5 +339,12 @@ public class ExchangeServiceImpl implements ExchangeService {
 		return retMap;
 	}
 	
-	
+	public int addPatientByChList(String dept_code, String listStr, String exchangeId){
+		String hql = "From Patient0 p where p.c_ch in ("+listStr+") and p.c_gbbz = 0 and p.c_bmid='"+ dept_code +"' and p.c_zyh not in (select ed.patient.c_zyh from ExchangeDetail ed where ed.c_exch_id = '"+ exchangeId +"')";
+		List<Patient0> plist = hdao.queryHql(hql);
+		for(Patient0 p: plist){
+			newExchangeDetail(exchangeId, p, dept_code);
+		}
+		return plist.size();
+	}
 }

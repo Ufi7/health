@@ -42,4 +42,6 @@ public interface ExchangeService {
 	public ExchangeDetail saveExchangeDetailItem(ExchangeDetail ed);
 	
 	public Map getPatientHistory(String patientId);
+	
+	public int addPatientByChList(String dept_code, String listStr, String exchangeId);
 }
