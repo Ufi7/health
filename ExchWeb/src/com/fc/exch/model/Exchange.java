@@ -7,6 +7,10 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+/**
+ * @author yufihe@hotmail.com
+ *
+ */
 @Entity
 @Table(name="t_exchange")
 public class Exchange implements Cloneable{
@@ -115,6 +119,55 @@ public class Exchange implements Cloneable{
 	
 	@Column(name="c_dept_code")
     private String c_dept_code;
+	
+	
+	
+	
+	@Column(name="c_jbysid ")
+    private String c_jbysid ;
+	
+	@Column(name="c_jbys")
+    private String c_jbys;
+	
+	@Column(name="c_jbysid2")
+    private String c_jbysid2;
+	
+	@Column(name="c_jbys2")
+    private String c_jbys2;
+	
+	
+
+	public String getC_jbysid() {
+		return c_jbysid;
+	}
+
+	public void setC_jbysid(String c_jbysid) {
+		this.c_jbysid = c_jbysid;
+	}
+
+	public String getC_jbys() {
+		return c_jbys;
+	}
+
+	public void setC_jbys(String c_jbys) {
+		this.c_jbys = c_jbys;
+	}
+
+	public String getC_jbysid2() {
+		return c_jbysid2;
+	}
+
+	public void setC_jbysid2(String c_jbysid2) {
+		this.c_jbysid2 = c_jbysid2;
+	}
+
+	public String getC_jbys2() {
+		return c_jbys2;
+	}
+
+	public void setC_jbys2(String c_jbys2) {
+		this.c_jbys2 = c_jbys2;
+	}
 
 	public String getExchangeId() {
 		return exchangeId;

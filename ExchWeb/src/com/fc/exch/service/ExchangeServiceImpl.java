@@ -45,6 +45,11 @@ public class ExchangeServiceImpl implements ExchangeService {
 		String queryStr = "select c_user_id, c_user_name from t_user where C_dept_id = '"+dept_code+"'";
 		return hdao.querySql(queryStr);
 	}
+	
+	public List getUserList(String dept_code, String type_code, String excludeId){
+		String queryStr = "select c_user_id, c_user_name from t_user where C_dept_id = ? and C_HOS_TYPE = ? and c_user_id != ?";
+		return hdao.querySql(queryStr, dept_code, type_code, excludeId);
+	}
 
 	@Override
 	public List getExchangeTeamplateList(String exchangeTargetUserId) {
@@ -55,11 +60,21 @@ public class ExchangeServiceImpl implements ExchangeService {
 	public final static String GET_USERNAME_BY_USERID_SQL = "select c_user_name from t_user where c_user_id = ?";
 
 	@Override
-	public Exchange newExchange(Date date, String jbhs1, String jbhsid1,  String jbhsid2, String deptCode, String templatedId) {
+	public Exchange newExchange(Date date, String jbhs1, String jbhsid1,  String jbhsid2, String deptCode, String exchangeOwenrDoctorUserId, String exchangeDoctorUserId, String templatedId) {
 		// TODO Auto-generated method stub
 		
+		String jbhs2 = null, jbys=null, jbys2 = null;
+		
 		List usernameList = hdao.querySql(GET_USERNAME_BY_USERID_SQL, jbhsid2);
-		String jbhs2 = (String)usernameList.get(0);
+		jbhs2 = (String)usernameList.get(0);
+		
+		if(StringUtils.isBlank(templatedId)){
+			List usernameList2 = hdao.querySql(GET_USERNAME_BY_USERID_SQL, exchangeOwenrDoctorUserId);
+			jbys = (String)usernameList2.get(0);
+		}
+		
+		List usernameList3 = hdao.querySql(GET_USERNAME_BY_USERID_SQL, exchangeDoctorUserId);
+		jbys2 = (String)usernameList3.get(0);
 		
 		Exchange ex;
 		List<ExchangeDetail> newList = new ArrayList();
@@ -89,16 +104,22 @@ public class ExchangeServiceImpl implements ExchangeService {
 				newexd.setExchangeDetailId(UUID.randomUUID().toString());
 				newList.add(newexd);
 			}
+			ex.setC_jbys(oldEx.getC_jbys2());
+			ex.setC_jbysid(oldEx.getC_jbysid2());
 		}else{
 			ex = new Exchange();
 			ex.setC_yjsbzt("");
 			ex.setExchangeId(UUID.randomUUID().toString());
+			ex.setC_jbys(jbys);
+			ex.setC_jbysid(exchangeOwenrDoctorUserId);
 		}
 		ex.setC_jbrq(date);
 		ex.setC_jbhsid(jbhsid1);
 		ex.setC_jbhs(jbhs1);
 		ex.setC_jbhsid2(jbhsid2);
 		ex.setC_jbhs2(jbhs2);
+		ex.setC_jbysid2(exchangeDoctorUserId);
+		ex.setC_jbys2(jbys2);
 		ex.setC_dept_code(deptCode);
 		ex.setC_status("00");
 		
@@ -267,11 +288,17 @@ public class ExchangeServiceImpl implements ExchangeService {
 				if(ed.getC_sw()>0 || ed.getC_cy()>0){
 					//死亡 或 出院 关闭状态
 					p.setC_gbbz(1);
+				}else if(ed.getC_zc()>0){
+					//转出 清空部门ID
+					p.setC_ybmid(p.getC_bmid());
+					p.setC_bmid("");
 				}else{
 					p.setC_zbhsid(operatorUserId);
 					List usernameList = hdao.querySql(GET_USERNAME_BY_USERID_SQL, operatorUserId);
 					String jbhs = (String)usernameList.get(0);
 					p.setC_zbhs(jbhs);
+					p.setC_zbys(ex.getC_jbys2());
+					p.setC_zbysid(ex.getC_jbysid2());
 				}
 				hdao.saveEntity(ed);
 			}

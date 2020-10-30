@@ -17,9 +17,11 @@ public interface ExchangeService {
 	
 	public List getExchangeTargetList(String dept_code);
 	
+	public List getUserList(String dept_code, String type_code, String excludeId);
+	
 	public List getExchangeTeamplateList(String exchangeTargetUserId);
 	
-	public Exchange newExchange(Date date, String jbhs1, String jbhsid1,  String jbhsid2,  String deptCode, String templatedId);
+	public Exchange newExchange(Date date, String jbhs1, String jbhsid1,  String jbhsid2,  String deptCode,String exchangeOwenrDoctorUserId, String exchangeDoctorUserId,String templatedId);
 	
 	public PagedList getSelectablePatientList(PagedList pl, String dept_code, String exchangeId);
 	

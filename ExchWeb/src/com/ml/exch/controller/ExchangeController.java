@@ -63,8 +63,13 @@ public class ExchangeController {
 		request.setAttribute("dateOption", dateOption);
 		
 		//交班对象
-		List exchangeTargetList = exchangeService.getExchangeTargetList(ui.getDeptId());
-		request.setAttribute("exchangeTargetList", exchangeTargetList);
+//		List exchangeTargetList = exchangeService.getExchangeTargetList(ui.getDeptId());
+//		request.setAttribute("exchangeTargetList", exchangeTargetList);
+		List exchangeNurseList  = exchangeService.getUserList(ui.getDeptId(), "9", ui.getUserSysId());
+		request.setAttribute("exchangeNurseList", exchangeNurseList);
+		List exchangeDoctorList  = exchangeService.getUserList(ui.getDeptId(), "8", ui.getUserSysId());
+		request.setAttribute("exchangeDoctorList", exchangeDoctorList);
+		
 		
 		//交班模板
 		List exchangeTemplateList = exchangeService.getExchangeTeamplateList(ui.getUserSysId());
@@ -79,6 +84,8 @@ public class ExchangeController {
 	public Map initExchange(HttpServletRequest request, @RequestBody Map<String, String> map) throws ParseException{
 		String exchangeDate = map.get("exchangeDate");
 		String exchangeTargetUserId = map.get("exchangeTargetUserId");
+		String exchangeOwenrDoctorUserId = map.get("exchangeOwenrDoctorUserId");
+		String exchangeDoctorUserId = map.get("exchangeDoctorUserId");
 		String exchangeTemplateId =map.get("exchangeTemplateId");
 		System.out.println(exchangeTemplateId);
 		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
@@ -86,7 +93,7 @@ public class ExchangeController {
 		//TODO: 校验数据
 		
 		Date date = new SimpleDateFormat("yyyy-MM-dd").parse(exchangeDate);
-		Exchange ex = exchangeService.newExchange(date, ui.getUserName(), ui.getUserSysId(), exchangeTargetUserId, ui.getDeptId(), exchangeTemplateId);
+		Exchange ex = exchangeService.newExchange(date, ui.getUserName(), ui.getUserSysId(), exchangeTargetUserId, ui.getDeptId(), exchangeOwenrDoctorUserId,exchangeDoctorUserId, exchangeTemplateId);
 		Map returnMap = new HashMap();
 		returnMap.put("exchangeId", ex.getExchangeId());
 		
@@ -124,8 +131,12 @@ public class ExchangeController {
 		
 		//交班护士 option list
 		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
-		List exchangeTargetList = exchangeService.getExchangeTargetList(ui.getDeptId());
-		request.setAttribute("exchangeTargetList", exchangeTargetList);
+//		List exchangeTargetList = exchangeService.getExchangeTargetList(ui.getDeptId());
+//		request.setAttribute("exchangeTargetList", exchangeTargetList);
+		List exchangeNurseList  = exchangeService.getUserList(ui.getDeptId(), "9", ui.getUserSysId());
+		request.setAttribute("exchangeNurseList", exchangeNurseList);
+		List exchangeDoctorList  = exchangeService.getUserList(ui.getDeptId(), "8", ui.getUserSysId());
+		request.setAttribute("exchangeDoctorList", exchangeDoctorList);
 		
 		return "editexchange";
 	}
