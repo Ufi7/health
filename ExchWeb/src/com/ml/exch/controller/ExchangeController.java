@@ -230,9 +230,9 @@ public class ExchangeController {
 	public Object addPatientByCH(HttpServletRequest request, @RequestBody Map<String, String> map,@PathVariable("exchangeId") String exchangeId) throws Exception{
 		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
 		String c_ch = map.get("c_ch");
-		Pattern pattern1 = Pattern.compile("^[\\d\\,]*\\d$");
+		Pattern pattern1 = Pattern.compile("^[\\d+\\,]*\\d+$");
 		Matcher isPattern1 = pattern1.matcher(c_ch);
-		Pattern pattern2 = Pattern.compile("^\\d-\\d$");
+		Pattern pattern2 = Pattern.compile("^\\d+-\\d+$");
 		Matcher isPattern2 = pattern2.matcher(c_ch);
 		String sql_parameter = "";
 		int input_count = 0;
@@ -241,6 +241,9 @@ public class ExchangeController {
 			String[] ids = c_ch.split(",");
 			for(String str:ids){
 				sql_parameter = sql_parameter+"'"+str+"',";
+				if(str.length()==1){
+					sql_parameter = sql_parameter+"'0"+str+"',";
+				}
 				input_count++;
 			}
 			
@@ -250,6 +253,9 @@ public class ExchangeController {
 			int end = Integer.parseInt(range[1]);
 			for(int i=start;i<=end;i++){
 				sql_parameter = sql_parameter +"'"+i+"',";
+				if(i<10){
+					sql_parameter = sql_parameter +"'0"+i+"',";
+				}
 				input_count++;
 			}
 		}else{
