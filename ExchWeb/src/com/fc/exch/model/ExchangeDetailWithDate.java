@@ -1,5 +1,7 @@
 package com.fc.exch.model;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -9,7 +11,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name="t_detail_info")
-public class ExchangeDetailWithDate {
+public class ExchangeDetailWithDate implements Cloneable{
 	public String getExchangeDetailId() {
 		return exchangeDetailId;
 	}
@@ -346,6 +348,19 @@ public class ExchangeDetailWithDate {
 	@JoinColumn(name="c_exch_id", referencedColumnName="c_exch_id")
     private ExchangeWithDateOnly c_exch_id;
 	
+	
+	
+	
+	public Date getC_insert_time() {
+		return c_insert_time;
+	}
+
+	public void setC_insert_time(Date c_insert_time) {
+		this.c_insert_time = c_insert_time;
+	}
+
+
+
 	@Column(name="c_xry")
 	private int c_xry;
     
@@ -450,4 +465,19 @@ public class ExchangeDetailWithDate {
 	
 	@Column(name="c_dept_code")
     private String c_dept_code;
+	
+	@Column(name="c_insert_time")
+	private Date c_insert_time;
+	
+	@Override  
+    public Object clone() {  
+		ExchangeDetailWithDate exdd = null;  
+        try{  
+        	exdd = (ExchangeDetailWithDate)super.clone();  
+        }catch(CloneNotSupportedException e) {  
+            e.printStackTrace();  
+        }  
+        exdd.setExchangeDetailId(null);
+        return exdd;  
+    }  
 }

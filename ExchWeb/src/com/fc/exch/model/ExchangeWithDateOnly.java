@@ -21,6 +21,17 @@ public class ExchangeWithDateOnly {
 	
 	@Column(name="c_jbhs")
     private String c_jbhs;
+	
+	@Column(name="c_status")
+    private String c_status;
+
+	public String getC_status() {
+		return c_status;
+	}
+
+	public void setC_status(String c_status) {
+		this.c_status = c_status;
+	}
 
 	public String getC_jbhsid() {
 		return c_jbhsid;

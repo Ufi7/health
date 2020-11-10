@@ -2,6 +2,7 @@ package com.ml.exch.controller;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -51,60 +52,82 @@ public class ExchangeController {
 	
 	@RequestMapping("initexchangepage.do")
 	public String initExchangePage(HttpServletRequest request){
-		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
-		//System.out.println(ui.getUserCode()+"\t"+ui.getUserName()+"\t"+ui.getUserPwd()+"\t"+ui.getUserSysId()+"\t"+ui.getUserType());
-		//System.out.println(ui.getDeptCode()+"\t"+ui.getDeptId()+"\t"+ui.getDeptName()+"\t"+ui.getDeptSysCode());
+//		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
+//		//日期选项
+//		LocalDateTime ldt0 = LocalDateTime.now();
+//		LocalDateTime ldt1 = LocalDateTime.now().plusDays(1);
+//		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
+//		List<String> dateOption = new ArrayList();
+//		dateOption.add(formatter.format(ldt0));
+//		dateOption.add(formatter.format(ldt1));
+//		request.setAttribute("dateOption", dateOption);
+//		//交班对象
+//		List exchangeNurseList  = exchangeService.getUserList(ui.getDeptId(), "9", ui.getUserSysId());
+//		request.setAttribute("exchangeNurseList", exchangeNurseList);
+//		List exchangeDoctorList  = exchangeService.getUserList(ui.getDeptId(), "8", ui.getUserSysId());
+//		request.setAttribute("exchangeDoctorList", exchangeDoctorList);
+//		//交班模板
+//		List exchangeTemplateList = exchangeService.getExchangeTeamplateList(ui.getUserSysId());
+//		request.setAttribute("exchangeTemplateList", exchangeTemplateList);
+//		return "initexchange";
 		
-		//日期选项
+		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
 		LocalDateTime ldt0 = LocalDateTime.now();
+		Date jbrq = null;
+		if(ldt0.getHour()>=8){
+			jbrq =  Date.from(ldt0.plusDays(1).atZone(ZoneId.systemDefault()).toInstant());
+		}else{
+			jbrq =  Date.from(ldt0.atZone(ZoneId.systemDefault()).toInstant());
+		}
+		Exchange ex = exchangeService.newExchange(jbrq, ui.getUserName(), ui.getUserSysId(), null, ui.getDeptId(), null,null, null);
+		request.setAttribute("exchangeId", ex.getExchangeId());
+		
+		//搅拌日期
+		ldt0 = LocalDateTime.now();
 		LocalDateTime ldt1 = LocalDateTime.now().plusDays(1);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
 		List<String> dateOption = new ArrayList();
 		dateOption.add(formatter.format(ldt0));
 		dateOption.add(formatter.format(ldt1));
 		request.setAttribute("dateOption", dateOption);
-		
 		//交班对象
-//		List exchangeTargetList = exchangeService.getExchangeTargetList(ui.getDeptId());
-//		request.setAttribute("exchangeTargetList", exchangeTargetList);
 		List exchangeNurseList  = exchangeService.getUserList(ui.getDeptId(), "9", ui.getUserSysId());
 		request.setAttribute("exchangeNurseList", exchangeNurseList);
 		List exchangeDoctorList  = exchangeService.getUserList(ui.getDeptId(), "8", ui.getUserSysId());
 		request.setAttribute("exchangeDoctorList", exchangeDoctorList);
 		
-		
-		//交班模板
-		List exchangeTemplateList = exchangeService.getExchangeTeamplateList(ui.getUserSysId());
-		request.setAttribute("exchangeTemplateList", exchangeTemplateList);
-				
-		return "initexchange";
-	}
-	
-	
-	@RequestMapping(value="initexchange.do", method=RequestMethod.POST)
-	@ResponseBody
-	public Map initExchange(HttpServletRequest request, @RequestBody Map<String, String> map) throws ParseException{
-		String exchangeDate = map.get("exchangeDate");
-		String exchangeTargetUserId = map.get("exchangeTargetUserId");
-		String exchangeOwenrDoctorUserId = map.get("exchangeOwenrDoctorUserId");
-		String exchangeDoctorUserId = map.get("exchangeDoctorUserId");
-		String exchangeTemplateId =map.get("exchangeTemplateId");
-		System.out.println(exchangeTemplateId);
-		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
-		
-		//TODO: 校验数据
-		
-		Date date = new SimpleDateFormat("yyyy-MM-dd").parse(exchangeDate);
-		Exchange ex = exchangeService.newExchange(date, ui.getUserName(), ui.getUserSysId(), exchangeTargetUserId, ui.getDeptId(), exchangeOwenrDoctorUserId,exchangeDoctorUserId, exchangeTemplateId);
-		Map returnMap = new HashMap();
-		returnMap.put("exchangeId", ex.getExchangeId());
-		
 		//refresh statis
 		RefreshExchangeStatisThread thread = new RefreshExchangeStatisThread(exchangeService, ex.getExchangeId());
 		thread.start();
 		
-		return returnMap;
+		return "editexchange";
 	}
+	
+	
+//	@RequestMapping(value="initexchange.do", method=RequestMethod.POST)
+//	@ResponseBody
+//	public Map initExchange(HttpServletRequest request, @RequestBody Map<String, String> map) throws ParseException{
+//		String exchangeDate = map.get("exchangeDate");
+//		String exchangeTargetUserId = map.get("exchangeTargetUserId");
+//		String exchangeOwenrDoctorUserId = map.get("exchangeOwenrDoctorUserId");
+//		String exchangeDoctorUserId = map.get("exchangeDoctorUserId");
+//		String exchangeTemplateId =map.get("exchangeTemplateId");
+//		System.out.println(exchangeTemplateId);
+//		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
+//		
+//		//TODO: 校验数据
+//		
+//		Date date = new SimpleDateFormat("yyyy-MM-dd").parse(exchangeDate);
+//		Exchange ex = exchangeService.newExchange(date, ui.getUserName(), ui.getUserSysId(), exchangeTargetUserId, ui.getDeptId(), exchangeOwenrDoctorUserId,exchangeDoctorUserId, exchangeTemplateId);
+//		Map returnMap = new HashMap();
+//		returnMap.put("exchangeId", ex.getExchangeId());
+//		
+//		//refresh statis
+//		RefreshExchangeStatisThread thread = new RefreshExchangeStatisThread(exchangeService, ex.getExchangeId());
+//		thread.start();
+//		
+//		return returnMap;
+//	}
 	
 	
 	@RequestMapping("list.do")
@@ -139,6 +162,16 @@ public class ExchangeController {
 		request.setAttribute("exchangeNurseList", exchangeNurseList);
 		List exchangeDoctorList  = exchangeService.getUserList(ui.getDeptId(), "8", ui.getUserSysId());
 		request.setAttribute("exchangeDoctorList", exchangeDoctorList);
+		
+		//搅拌日期
+		LocalDateTime ldt0 = LocalDateTime.now();
+		LocalDateTime ldt1 = LocalDateTime.now().plusDays(1);
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
+		List<String> dateOption = new ArrayList();
+		dateOption.add(formatter.format(ldt0));
+		dateOption.add(formatter.format(ldt1));
+		request.setAttribute("dateOption", dateOption);
+		
 		
 		return "editexchange";
 	}
@@ -205,6 +238,30 @@ public class ExchangeController {
 		thread.start();
 		
 		return retObject;
+	}
+	
+	@RequestMapping(value="updateexchangeattr/{exchangeId}.do", method=RequestMethod.POST)
+	@ResponseBody
+	public Object updateExAttribute(HttpServletRequest request, @RequestBody Map<String, String> map, @PathVariable("exchangeId") String exchangeId) throws Exception{
+		//TODO
+		String exchangeDetailId = map.get("exchangeDetailId");
+		String field = map.get("field");
+		String value = map.get("value");
+		
+		//validate if the exhcnage is in draft status...
+		Exchange ex = exchangeService.getExchangeById(exchangeId);
+		if(!ex.getC_status().equals("00") && !ex.getC_status().equals("01")){
+			throw new Exception("用户要更改的交接班状态不可用或已被修改...");
+		}
+		Integer ret=0;
+		if("c_jbrq".equals(field)){
+			ret = exchangeService.updateExchangeDate(exchangeId, value);
+		}else if("c_jbysid".equals(field) || "c_jbhsid2".equals(field) || "c_jbysid2".equals(field)){
+			ret = exchangeService.updateExchangeRelatedUser(exchangeId, field, value);
+		}else{
+			throw new Exception("非法操作！字段名不正确！");
+		}
+		return ret;
 	}
 	
 	@RequestMapping(value="addpatient/{exchangeId}.do", method=RequestMethod.POST)
@@ -279,7 +336,7 @@ public class ExchangeController {
 		return retmap;
 	}
 	
-//	@RequestMapping(value="updatestatis/{exchangeId}.do", method=RequestMethod.POST)
+//	@RequestMapping(value="updatestatus/{exchangeId}.do", method=RequestMethod.POST)
 //	@ResponseBody
 //	public Object updateStatis(@PathVariable("exchangeId") String exchangeId){
 //		return exchangeService.updateStatis(exchangeId);
@@ -287,7 +344,7 @@ public class ExchangeController {
 	
 	@RequestMapping(value="update/{exchangeId}.do", method=RequestMethod.POST)
 	@ResponseBody
-	public Object updateStatis(@PathVariable("exchangeId") String exchangeId, @RequestBody Map<String, String> map, HttpServletRequest request) throws Exception{
+	public Object updateStatus(@PathVariable("exchangeId") String exchangeId, @RequestBody Map<String, String> map, HttpServletRequest request) throws Exception{
 		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
 		String targetStatus = map.get("targetStatus");
 		String comment = map.get("comment");
@@ -421,4 +478,21 @@ public class ExchangeController {
 		request.setAttribute("patientId", patientId);
 		return "patienthistorypage";
 	}
+	
+	@RequestMapping(value="removeitem/{exchangeId}/{exchangeDetailId}.do",method=RequestMethod.POST)
+	@ResponseBody
+	public Integer removeExchangeDetailFromExchange(@PathVariable("exchangeDetailId")String exchangeDetailId, @PathVariable("exchangeId") String exchangeId) throws Exception{
+		//validate if the exhcnage is in draft status...
+		Exchange ex = exchangeService.getExchangeById(exchangeId);
+		if(!ex.getC_status().equals("00") && !ex.getC_status().equals("01")){
+			throw new Exception("用户要更改的交接班状态不可用或已被修改...");
+		}
+		Integer ret =  exchangeService.remvoeExchagneDetail(exchangeId, exchangeDetailId);
+		//refresh statis
+		RefreshExchangeStatisThread thread = new RefreshExchangeStatisThread(exchangeService, ex.getExchangeId());
+		thread.start();
+		
+		return ret;
+	}
+	
 }
