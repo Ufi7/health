@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.fc.core.model.PagedList;
+import com.fc.exch.model.Department;
 import com.fc.exch.model.ExConstants;
 import com.fc.exch.model.Exchange;
 import com.fc.exch.model.ExchangeDetail;
@@ -34,6 +35,7 @@ import com.fc.exch.model.Patient0;
 import com.fc.exch.service.ExchangeService;
 import com.fc.exch.service.RefreshExchangeStatisThread;
 import com.fc.sysmanager.login.bean.UserInfo;
+
 import com.fc.sysmanager.web.common.SysConstant;
 import com.fc.sysmanager.web.common.WebUtil;
 
@@ -50,8 +52,8 @@ public class ExchangeController {
 	}
 	
 	
-	@RequestMapping("initexchangepage.do")
-	public String initExchangePage(HttpServletRequest request){
+	@RequestMapping(value="initexchangepage.do")
+	public String initExchangePage(HttpServletRequest request) throws ParseException{
 //		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
 //		//日期选项
 //		LocalDateTime ldt0 = LocalDateTime.now();
@@ -70,7 +72,50 @@ public class ExchangeController {
 //		List exchangeTemplateList = exchangeService.getExchangeTeamplateList(ui.getUserSysId());
 //		request.setAttribute("exchangeTemplateList", exchangeTemplateList);
 //		return "initexchange";
+//-------------------------------------------------------------------------------------------------------		
+//		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
+//		LocalDateTime ldt0 = LocalDateTime.now();
+//		Date jbrq = null;
+//		if(ldt0.getHour()>=8){
+//			jbrq =  Date.from(ldt0.plusDays(1).atZone(ZoneId.systemDefault()).toInstant());
+//		}else{
+//			jbrq =  Date.from(ldt0.atZone(ZoneId.systemDefault()).toInstant());
+//		}
+//		Exchange ex = exchangeService.newExchange(jbrq, ui.getUserName(), ui.getUserSysId(), null, ui.getDeptId(), null,null, null);
+//		request.setAttribute("exchangeId", ex.getExchangeId());
+//		
+//		//搅拌日期
+//		ldt0 = LocalDateTime.now();
+//		LocalDateTime ldt1 = LocalDateTime.now().plusDays(1);
+//		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
+//		List<String> dateOption = new ArrayList();
+//		dateOption.add(formatter.format(ldt0));
+//		dateOption.add(formatter.format(ldt1));
+//		request.setAttribute("dateOption", dateOption);
+//		//交班对象
+//		List exchangeNurseList  = exchangeService.getUserList(ui.getDeptId(), "9", ui.getUserSysId());
+//		request.setAttribute("exchangeNurseList", exchangeNurseList);
+//		List exchangeDoctorList  = exchangeService.getUserList(ui.getDeptId(), "8", ui.getUserSysId());
+//		request.setAttribute("exchangeDoctorList", exchangeDoctorList);
+//		
+//		//refresh statis
+//		RefreshExchangeStatisThread thread = new RefreshExchangeStatisThread(exchangeService, ex.getExchangeId());
+//		thread.start();
+//		
+//		return "editexchange";
 		
+		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
+		List<Exchange> recentDraftExchangelist = exchangeService.getRecentDraftExchangeByUser(ui.getUserSysId());
+		if(recentDraftExchangelist.size()==0){
+			return initExchange(request);
+		}else{
+			request.setAttribute("recentDraftExchangelist", recentDraftExchangelist);
+			return "mydraftexchangelist";
+		}
+	}
+	
+	@RequestMapping(value="forceinitexchangepage.do")
+	public String initExchange(HttpServletRequest request){
 		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
 		LocalDateTime ldt0 = LocalDateTime.now();
 		Date jbrq = null;
@@ -95,6 +140,9 @@ public class ExchangeController {
 		request.setAttribute("exchangeNurseList", exchangeNurseList);
 		List exchangeDoctorList  = exchangeService.getUserList(ui.getDeptId(), "8", ui.getUserSysId());
 		request.setAttribute("exchangeDoctorList", exchangeDoctorList);
+		
+		List<Department> deptList = exchangeService.getOtherDeptList(ui.getDeptId());
+		request.setAttribute("deptList", deptList);
 		
 		//refresh statis
 		RefreshExchangeStatisThread thread = new RefreshExchangeStatisThread(exchangeService, ex.getExchangeId());
@@ -172,6 +220,8 @@ public class ExchangeController {
 		dateOption.add(formatter.format(ldt1));
 		request.setAttribute("dateOption", dateOption);
 		
+		List<Department> deptList = exchangeService.getOtherDeptList(ui.getDeptId());
+		request.setAttribute("deptList", deptList);
 		
 		return "editexchange";
 	}
@@ -217,15 +267,16 @@ public class ExchangeController {
 			fields = new String[]{field};
 			values = new String[]{value};
 		}else if("jianyuan".equals(field)){
-			fields = new String[]{"c_cy", "c_zc", "c_sw"};
+			fields = new String[]{"c_cy", "c_zc", "c_sw", "c_jsonstr"};
+			String jsonStr = map.get("jsonstr");
 			if("1".equals(value)){
-				values = new String[]{"0", "0", "1"};
+				values = new String[]{"0", "0", "1", jsonStr};
 			}else if("2".equals(value)){
-				values = new String[]{"1", "0", "0"};
+				values = new String[]{"1", "0", "0", jsonStr};
 			}else if("3".equals(value)){
-				values = new String[]{"0", "1", "0"};
+				values = new String[]{"0", "1", "0", jsonStr};
 			}else{
-				values = new String[]{"0", "0", "0"};
+				values = new String[]{"0", "0", "0", jsonStr};
 			}
 		}else if("c_hltsbz".equals(field)){
 			fields = new String[]{field};

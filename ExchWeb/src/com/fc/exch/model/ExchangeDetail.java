@@ -452,9 +452,18 @@ public class ExchangeDetail implements Cloneable{
 	@Column(name="c_insert_time")
 	private Date c_insert_time;
 	
+	@Column(name="c_jsonstr")
+	private String c_jsonstr;
 	
-	
-	 public Date getC_insert_time() {
+	 public String getC_jsonstr() {
+		return c_jsonstr;
+	}
+
+	public void setC_jsonstr(String c_jsonstr) {
+		this.c_jsonstr = c_jsonstr;
+	}
+
+	public Date getC_insert_time() {
 		return c_insert_time;
 	}
 

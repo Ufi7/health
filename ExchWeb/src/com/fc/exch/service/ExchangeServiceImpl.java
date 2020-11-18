@@ -1,23 +1,33 @@
 package com.fc.exch.service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Vector;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fc.core.dao.hibernate.genericdao.impl.HCommonDao;
 import com.fc.core.model.PagedList;
+import com.fc.exch.model.Department;
 import com.fc.exch.model.ExConstants;
 import com.fc.exch.model.Exchange;
 import com.fc.exch.model.ExchangeDetail;
+import com.fc.exch.model.ExchangeDetailWithDate;
 import com.fc.exch.model.Patient0;
+
 
 import bsh.org.objectweb.asm.Constants;
 @Service
@@ -60,21 +70,26 @@ public class ExchangeServiceImpl implements ExchangeService {
 	public final static String GET_USERNAME_BY_USERID_SQL = "select c_user_name from t_user where c_user_id = ?";
 
 	@Override
+	@Transactional 
 	public Exchange newExchange(Date date, String jbhs1, String jbhsid1,  String jbhsid2, String deptCode, String exchangeOwenrDoctorUserId, String exchangeDoctorUserId, String templatedId) {
 		// TODO Auto-generated method stub
 		
 		String jbhs2 = null, jbys=null, jbys2 = null;
 		
-		List usernameList = hdao.querySql(GET_USERNAME_BY_USERID_SQL, jbhsid2);
-		jbhs2 = (String)usernameList.get(0);
+		if(StringUtils.isNotBlank(jbhsid2)){
+			List usernameList = hdao.querySql(GET_USERNAME_BY_USERID_SQL, jbhsid2);
+			jbhs2 = (String)usernameList.get(0);
+		}
 		
-		if(StringUtils.isBlank(templatedId)){
+		if(StringUtils.isNotBlank(templatedId)){
 			List usernameList2 = hdao.querySql(GET_USERNAME_BY_USERID_SQL, exchangeOwenrDoctorUserId);
 			jbys = (String)usernameList2.get(0);
 		}
 		
-		List usernameList3 = hdao.querySql(GET_USERNAME_BY_USERID_SQL, exchangeDoctorUserId);
-		jbys2 = (String)usernameList3.get(0);
+		if(StringUtils.isNotBlank(exchangeDoctorUserId)){
+			List usernameList3 = hdao.querySql(GET_USERNAME_BY_USERID_SQL, exchangeDoctorUserId);
+			jbys2 = (String)usernameList3.get(0);
+		}
 		
 		Exchange ex;
 		List<ExchangeDetail> newList = new ArrayList();
@@ -112,6 +127,55 @@ public class ExchangeServiceImpl implements ExchangeService {
 			ex.setExchangeId(UUID.randomUUID().toString());
 			ex.setC_jbys(jbys);
 			ex.setC_jbysid(exchangeOwenrDoctorUserId);
+			
+			//to add patient which belongs to operator
+			//list patient 1st
+			String hql1 = "From Patient0 p where p.c_zbhsid = ? and p.c_gbbz=0";
+			List<Patient0> list = hdao.queryHql(hql1, jbhsid1);
+			for(Patient0 p:list){
+				ExchangeDetailWithDate exdd = loadHistoryExchangeDetail(p);
+				if(exdd == null){
+					newList.add(newEmptyExchangeDetail(ex.getExchangeId(), p, deptCode));
+				}else{
+					if((date.getTime()/(1000*60*60*24)) > (exdd.getC_exch_id().getC_jbrq().getTime()/(1000*60*60*24))){
+						newList.add(this.cloneHistoryExchangeDetail(exdd, ex.getExchangeId()));
+					}else{
+						//skip, records already in another exchange
+						continue;
+					}
+				}
+
+//				String hql2 = "From ExchangeDetailWithDate ed where ed.c_zyh = ? and ed.c_status=? ORDER BY ed.c_exch_id.c_jbrq DESC";
+//				Query q = hdao.getSession().createQuery(hql2);
+//				q.setParameter(0, p.getC_zyh());
+//				q.setParameter(1, ExConstants.EXCHANGE_STATUS_SUBMITTED_10);
+//				q.setMaxResults(1);
+//				List<ExchangeDetailWithDate> list1 = q.list();
+//				if(list1.size()>0){
+//					ExchangeDetailWithDate exdd = list1.get(0);
+//					if((date.getTime()/(1000*60*60*24)) > (exdd.getC_exch_id().getC_jbrq().getTime()/(1000*60*60*24))){
+//						//clone item
+//						ExchangeDetail newexd = (ExchangeDetail)hdao.getEntity(ExchangeDetail.class, exdd.getExchangeDetailId()).clone();
+//						newexd.setC_insert_time(new Date());
+//						if(newexd.getC_zr()>0){
+//							newexd.setC_zr(0);
+//						}
+//						if(newexd.getC_xry()>0){
+//							newexd.setC_xry(0);
+//						}
+//						newexd.setC_exch_id(ex.getExchangeId());
+//						newexd.setExchangeDetailId(UUID.randomUUID().toString());
+//						newList.add(newexd);
+//					}else{
+//						//skip, records already in another exchange
+//						continue;
+//					}
+//				}else{
+//					//new item
+//					newList.add(newExchangeDetail(ex.getExchangeId(), p, deptCode));
+//				}
+			}
+			
 		}
 		ex.setC_jbrq(date);
 		ex.setC_jbhsid(jbhsid1);
@@ -170,19 +234,14 @@ public class ExchangeServiceImpl implements ExchangeService {
 
 	@Override
 	public ExchangeDetail newExchangeDetail(String exchangeId, Patient0 p, String c_dept_code) {
-		ExchangeDetail ed = new ExchangeDetail();
-		ed.setC_insert_time(new Date());
-		ed.setPatient(p);
-		if(StringUtils.isNotEmpty(p.getC_ybmid())){
-			ed.setC_zr(1);
+		ExchangeDetailWithDate exdd = loadHistoryExchangeDetail(p);
+		ExchangeDetail newed;
+		if(exdd == null){
+			newed = newEmptyExchangeDetail(exchangeId,  p,  c_dept_code);
 		}else{
-			ed.setC_xry(1);
+			newed = cloneHistoryExchangeDetail(exdd, exchangeId);
 		}
-		ed.setC_exch_id(exchangeId);
-		ed.setExchangeDetailId(UUID.randomUUID().toString());
-		ed.setC_dept_code(c_dept_code);
-		ed.setC_status("");
-		return (ExchangeDetail)hdao.saveEntity(ed);
+		return (ExchangeDetail)hdao.saveEntity(newed);
 	}
 
 	@Override
@@ -330,7 +389,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 //		String sql = "select ed.*, ex.c_jbrq from t_detail_info ed, t_exchange ex, t_patient p where ed.c_exch_id = ex.c_exch_id and ed.c_zyh = p.c_zyh and p.c_brid = ?";
 //		List edList = hdao.querySql(sql, p.getPatientId());
 		
-		String hql = "From ExchangeDetailWithDate ed where ed.c_zyh = ? and ed.c_status=? ORDER BY ed.c_exch_id.c_jbrq DESC";
+		String hql = "From ExchangeDetailWithDate ed where ed.c_zyh = ? and ed.c_exch_id.c_status=? ORDER BY ed.c_exch_id.c_jbrq DESC";
 		List edList = hdao.queryHql(hql, p.getC_zyh(), ExConstants.EXCHANGE_STATUS_SUBMITTED_10);
 		
 		Map retMap = new HashMap();
@@ -346,5 +405,114 @@ public class ExchangeServiceImpl implements ExchangeService {
 			newExchangeDetail(exchangeId, p, dept_code);
 		}
 		return plist.size();
+	}
+	
+	
+	private ExchangeDetail newEmptyExchangeDetail(String exchangeId, Patient0 p, String c_dept_code){
+		ExchangeDetail ed = new ExchangeDetail();
+		ed.setC_insert_time(new Date());
+		ed.setPatient(p);
+		if(StringUtils.isNotEmpty(p.getC_ybmid())){
+			ed.setC_zr(1);
+		}else{
+			ed.setC_xry(1);
+		}
+		ed.setC_exch_id(exchangeId);
+		ed.setExchangeDetailId(UUID.randomUUID().toString());
+		ed.setC_dept_code(c_dept_code);
+		ed.setC_status("");
+		return ed;
+	}
+	
+	private ExchangeDetailWithDate loadHistoryExchangeDetail(Patient0 p){
+		String hql2 = "From ExchangeDetailWithDate ed where ed.c_zyh = ? and ed.c_exch_id.c_status=? ORDER BY ed.c_exch_id.c_jbrq DESC";
+		Query q = hdao.getSession().createQuery(hql2);
+		q.setParameter(0, p.getC_zyh());
+		q.setParameter(1, ExConstants.EXCHANGE_STATUS_SUBMITTED_10);
+		q.setMaxResults(1);
+		List<ExchangeDetailWithDate> list1 = q.list();
+		if(list1.size()>0){
+			return  list1.get(0);
+//			if((date.getTime()/(1000*60*60*24)) > (exdd.getC_exch_id().getC_jbrq().getTime()/(1000*60*60*24))){
+//				//clone item
+//				ExchangeDetail newexd = (ExchangeDetail)hdao.getEntity(ExchangeDetail.class, exdd.getExchangeDetailId()).clone();
+//				newexd.setC_insert_time(new Date());
+//				if(newexd.getC_zr()>0){
+//					newexd.setC_zr(0);
+//				}
+//				if(newexd.getC_xry()>0){
+//					newexd.setC_xry(0);
+//				}
+//				newexd.setC_exch_id(ex.getExchangeId());
+//				newexd.setExchangeDetailId(UUID.randomUUID().toString());
+//				newList.add(newexd);
+//			}else{
+//				//skip, records already in another exchange
+//				continue;
+//			}
+		}else{
+			return null;
+		}
+	}
+	
+	private ExchangeDetail cloneHistoryExchangeDetail(ExchangeDetailWithDate exdd, String newExchangeId){
+		ExchangeDetail newexd =   (ExchangeDetail)hdao.getEntity(ExchangeDetail.class, exdd.getExchangeDetailId()).clone();
+		newexd.setC_insert_time(new Date());
+		if(newexd.getC_zr()>0){
+			newexd.setC_zr(0);
+		}
+		if(newexd.getC_xry()>0){
+			newexd.setC_xry(0);
+		}
+		newexd.setC_exch_id(newExchangeId);
+		newexd.setExchangeDetailId(UUID.randomUUID().toString());
+		return newexd;
+	}
+
+	@Override
+	public Integer updateExchangeDate(String exchangeId, String dateStr) {
+		String sql = "update t_exchange set c_jbrq = ? where c_exch_id = ? and (c_status='00' or c_status='01')";
+		return (Integer)hdao.executeSql(sql, dateStr, exchangeId);
+	}
+
+	@Override
+	public Integer updateExchangeRelatedUser(String exchangeId, String roleid, String userId) throws Exception {
+		String role = "";
+		if("c_jbhsid2".equals(roleid)){
+			role = "c_jbhs2";
+		}else if("c_jbysid".equals(roleid)){
+			role = "c_jbys";
+		}else if("c_jbysid2".equals(roleid)){
+			role = "c_jbys2";
+		}else{
+			throw new Exception("非法操作！字段名不正确！");
+		}
+		String sql = "update t_exchange set "+ role +" = (SELECT c_user_name FROM health_data.t_user where c_user_id = ?), "+ roleid +" = ? " +
+						"where c_exch_id = ? and (c_status='00' or c_status='01')";
+		return (Integer)hdao.executeSql(sql, userId, userId, exchangeId);
+	}
+
+	@Override
+	public Integer remvoeExchagneDetail(String exchangeId, String exchangeDetailId) {
+		String sql = "DELETE FROM t_detail_info WHERE detail_info_id = ? and c_exch_id = ?";
+		return (Integer)hdao.executeSql(sql, exchangeDetailId, exchangeId);
+	}
+
+	@Override
+	public List<Exchange> getRecentDraftExchangeByUser(String userId) throws ParseException {
+		LocalDateTime ldt0 = LocalDateTime.now();
+		LocalDateTime ldt1 = LocalDateTime.now().plusDays(1);
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.CHINA);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+				
+		// TODO Auto-generated method stub
+		String hql = "from Exchange ex where ex.c_jbhsid=? and (ex.c_status = '00' or ex.c_status='01') and ex.c_jbrq between ? and ? ";
+		return hdao.queryHql(hql,  userId, sdf.parse(formatter.format(ldt0)), sdf.parse(formatter.format(ldt1)));
+	}
+
+	@Override
+	public List<Department> getOtherDeptList(String dept_code) {
+		String hql = "from Department d where d.deptId != ?";
+		return hdao.queryHql(hql,dept_code);
 	}
 }

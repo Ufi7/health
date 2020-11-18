@@ -1,13 +1,16 @@
 package com.fc.exch.service;
 
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 import com.fc.core.model.PagedList;
+import com.fc.exch.model.Department;
 import com.fc.exch.model.Exchange;
 import com.fc.exch.model.ExchangeDetail;
 import com.fc.exch.model.Patient0;
+
 
 public interface ExchangeService {
 	
@@ -44,4 +47,14 @@ public interface ExchangeService {
 	public Map getPatientHistory(String patientId);
 	
 	public int addPatientByChList(String dept_code, String listStr, String exchangeId);
+	
+	public Integer updateExchangeDate(String exchangeId, String dateStr);
+	
+	public Integer updateExchangeRelatedUser(String exchangeId, String roleid, String userId)throws Exception;
+	
+	public Integer remvoeExchagneDetail(String exchangeId, String exchangeDetailId);
+	
+	public List<Exchange> getRecentDraftExchangeByUser(String userId)throws ParseException;
+	
+	public List<Department> getOtherDeptList(String dept_code);
 }
