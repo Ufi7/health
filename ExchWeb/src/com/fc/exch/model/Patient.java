@@ -19,24 +19,24 @@ import antlr.Utils;
 @Table(name="t_patient")
 public class Patient {
 
-	/*住院号*/
+	/*浣忛櫌鍙�*/
 	@Id
 	@Column(name="c_zyh")
 	private String zyh;
 	
-	/*病人ID*/
+	/*鐥呬汉ID*/
 	@Column(name="c_brid")
 	private String brid;
 	
-	/*床号*/
+	/*搴婂彿*/
 	@Column(name="c_ch")
 	private String ch;
 	
-	/*病人姓名*/
+	/*鐥呬汉濮撳悕*/
 	@Column(name="c_brxm")
 	private String brxm;
 	
-	/*出生日期*/
+	/*鍑虹敓鏃ユ湡*/
 	@Column(name="c_csrq")
 	@DateTimeFormat
 	private Date csrq;
@@ -44,23 +44,23 @@ public class Patient {
 	@Transient
 	private String csrqStr;
 	
-	/*性别 F--女 M--男*/
+	/*鎬у埆 F--濂� M--鐢�*/
 	@Column(name="c_xb")
 	private String xb;
 	
-	/*联系人*/
+	/*鑱旂郴浜�*/
 	@Column(name="c_lxr")
 	private String lxr;
 	
-	/*联系电话*/
+	/*鑱旂郴鐢佃瘽*/
 	@Column(name="c_lxdh")
 	private String lxdh;
 	
-	/*联系地址*/
+	/*鑱旂郴鍦板潃*/
 	@Column(name="c_lxdz")
 	private String lxdz;
 	
-	/*入院时间*/
+	/*鍏ラ櫌鏃堕棿*/
 	@Column(name="c_rysj")
 	@DateTimeFormat
 	private Date rysj;
@@ -68,16 +68,16 @@ public class Patient {
 	@Transient
 	private String rysjStr;
 	
-	/*病人状态 在院 --- 1，出院---0，死亡 --9*/
+	/*鐥呬汉鐘舵�� 鍦ㄩ櫌 --- 1锛屽嚭闄�---0锛屾浜� --9*/
 	@Column(name="c_brzt")
 	private String brzt;
 	
-	/*拟出院日期*/
+	/*鎷熷嚭闄㈡棩鏈�*/
 	@Column(name="c_ncyrq")
 	@DateTimeFormat
 	private Date ncycq;
 
-	/*出院时间*/
+	/*鍑洪櫌鏃堕棿*/
 	@Column(name="c_cysj")
 	@DateTimeFormat
 	private Date cysj;
@@ -85,95 +85,98 @@ public class Patient {
 	@Transient
 	private String cysjStr;
 	
-	/*出院类型 1--治愈出院 2--转入他院 3--家属要求出院*/
+	/*鍑洪櫌绫诲瀷 1--娌绘剤鍑洪櫌 2--杞叆浠栭櫌 3--瀹跺睘瑕佹眰鍑洪櫌*/
 	@Column(name="c_cylx")
 	private String cylx;
 
-	/*死亡时间*/
+	/*姝讳骸鏃堕棿*/
 	@Column(name="c_swsj")
 	@DateTimeFormat
 	private Date swsj;
 
-	/*死亡原因*/
+	/*姝讳骸鍘熷洜*/
 	@Column(name="c_swyy")
 	private String swyy;
 	
-	/*抢救措施*/
+	/*鎶㈡晳鎺柦*/
 	@Column(name="c_qjcs")
 	private String qjcs;
 	
-	/*主管医生ID*/
+	/*涓荤鍖荤敓ID*/
 	@Column(name="c_zgysid")
 	private String zgysid;
 	
-	/*主管医生*/
+	/*涓荤鍖荤敓*/
 	@Column(name="c_zyys")
 	private String zyys;
 	
-	/*主管护士ID*/
+	/*涓荤鎶ゅ＋ID*/
 	@Column(name="c_zghsid")
 	private String zghsid;
 	
-	/*主管护士*/
+	/*涓荤鎶ゅ＋*/
 	@Column(name="c_zghs")
 	private String zghs;
 	
-	/*主诉*/
+	/*涓昏瘔*/
 	@Column(name="c_zs")
 	private String zs;
 	
-	/*主要诊断*/
+	/*涓昏璇婃柇*/
 	@Column(name="c_zyzd")
 	private String zyzd;
 	
-	/*备注*/
+	/*澶囨敞*/
 	@Column(name="c_bz")
 	private String bz;
 	
-	/*所属部门ID*/
+	/*鎵�灞為儴闂↖D*/
 	@Column(name="c_bmid")
 	private String bmid;
 	
-	/*原所属部门ID*/
+	/*鍘熸墍灞為儴闂↖D*/
 	@Column(name="c_ybmid")
 	private String ybmid;
 	
-	/*原部门值班护士ID*/
+	/*鍘熼儴闂ㄥ�肩彮鎶ゅ＋ID*/
 	@Column(name="c_ybmzbhsid")
 	private String ybmzbhsid;
 	
-	/*原部门值班医生ID*/
+	/*鍘熼儴闂ㄥ�肩彮鍖荤敓ID*/
 	@Column(name="c_ybmzbysid")
 	private String ybmzbysid;
 	
-	/*转入日期*/
+	/*杞叆鏃ユ湡*/
 	@Column(name="c_zrrq")
 	@DateTimeFormat
 	private Date zrrq;
 	
-	/*值班医生ID*/
+	/*鍊肩彮鍖荤敓ID*/
 	@Column(name="c_zbysid")
 	private String zbysid;
 	
-	/*值班医生*/
+	/*鍊肩彮鍖荤敓*/
 	@Column(name="c_zbys")
 	private String zbys;
 	
-	/*值班护士ID*/
+	/*鍊肩彮鎶ゅ＋ID*/
 	@Column(name="c_zbhsid")
 	private String zbhsid;
 	
-	/*值班护士*/
+	/*鍊肩彮鎶ゅ＋*/
 	@Column(name="c_zbhs")
 	private String zbhs;
 	
-	/*关闭标志*/
+	/*鍏抽棴鏍囧織*/
 	@Column(name="c_gbbz")
 	private String gbbz;
 
-	/*医保类型 0-医保，1-自费*/
+	/*鍖讳繚绫诲瀷 0-鍖讳繚锛�1-鑷垂*/
 	@Column(name="c_yblx")
 	private String yblx;
+	
+	@Column(name="c_email")
+	private String email;
 	
 	@Transient
 	private Integer bqdj;
@@ -499,6 +502,14 @@ public class Patient {
 
 	public void setCysjStr(String cysjStr) {
 		this.cysjStr = cysjStr;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 	
 }

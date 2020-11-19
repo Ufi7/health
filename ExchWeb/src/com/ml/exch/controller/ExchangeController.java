@@ -145,8 +145,7 @@ public class ExchangeController {
 		request.setAttribute("deptList", deptList);
 		
 		//refresh statis
-		RefreshExchangeStatisThread thread = new RefreshExchangeStatisThread(exchangeService, ex.getExchangeId());
-		thread.start();
+		new RefreshExchangeStatisThread(exchangeService, ex.getExchangeId()).start();;
 		
 		return "editexchange";
 	}
@@ -285,8 +284,8 @@ public class ExchangeController {
 		Object retObject =  exchangeService.updateExchangeDetailItem(exchangeId, exchangeDetailId, fields, values);
 		
 		//refresh statis
-		RefreshExchangeStatisThread thread = new RefreshExchangeStatisThread(exchangeService, exchangeId);
-		thread.start();
+		new RefreshExchangeStatisThread(exchangeService, exchangeId).start();
+		
 		
 		return retObject;
 	}
@@ -327,8 +326,7 @@ public class ExchangeController {
 		ExchangeDetail ed = exchangeService.newExchangeDetail(exchangeId, p, ui.getDeptId());
 		
 		//refresh statis
-		RefreshExchangeStatisThread thread = new RefreshExchangeStatisThread(exchangeService, exchangeId);
-		thread.start();
+		new RefreshExchangeStatisThread(exchangeService, exchangeId).start();
 		
 		return ed;
 	}
@@ -380,8 +378,7 @@ public class ExchangeController {
 		
 		//refresh statis
 		if(input_count>0){
-			RefreshExchangeStatisThread thread = new RefreshExchangeStatisThread(exchangeService, exchangeId);
-			thread.start();
+			new RefreshExchangeStatisThread(exchangeService, exchangeId).start();;
 		}
 		
 		return retmap;
@@ -509,8 +506,7 @@ public class ExchangeController {
 			Object retObj =  exchangeService.saveExchangeDetailItem(ed);
 			
 			//refresh statis
-			RefreshExchangeStatisThread thread = new RefreshExchangeStatisThread(exchangeService, ex.getExchangeId());
-			thread.start();
+			new RefreshExchangeStatisThread(exchangeService, ex.getExchangeId()).start();
 			
 			return retObj;
 		}else{
@@ -540,10 +536,17 @@ public class ExchangeController {
 		}
 		Integer ret =  exchangeService.remvoeExchagneDetail(exchangeId, exchangeDetailId);
 		//refresh statis
-		RefreshExchangeStatisThread thread = new RefreshExchangeStatisThread(exchangeService, ex.getExchangeId());
-		thread.start();
+		new RefreshExchangeStatisThread(exchangeService, ex.getExchangeId()).start();
 		
 		return ret;
 	}
+	
+	@RequestMapping(value="remove/{exchangeId}.do")
+	@ResponseBody
+	public Integer removeDraftExchange(@PathVariable("exchangeId")String exchangeId,HttpServletRequest request) throws Exception{
+		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
+		return exchangeService.deleteDraftExchangeByCreator(exchangeId, ui.getUserSysId());
+	}
+	
 	
 }

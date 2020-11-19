@@ -17,6 +17,7 @@ import org.apache.commons.lang.StringUtils;
 import org.hibernate.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fc.core.dao.hibernate.genericdao.impl.HCommonDao;
@@ -30,6 +31,7 @@ import com.fc.exch.model.Patient0;
 
 
 import bsh.org.objectweb.asm.Constants;
+import net.sf.json.JSONObject;
 @Service
 @Transactional
 public class ExchangeServiceImpl implements ExchangeService {
@@ -305,6 +307,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 	private final static String SQL_EXCHANGE_STATUS_UPDATE_SQL_3 = "UPDATE t_exchange set c_status = ? where c_status = ? and c_jbhsid2 = ?  and c_exch_id = ?";
 	private final static String SQL_EXCHANGE_STATUS_UPDATE_SQL_4 = "UPDATE t_exchange set c_status = ? where c_status != ?  and c_exch_id = ?";
 	
+	private final static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
 	@Override
 	public Object exStatusUpdate(String exchangeId, String targetStatus, String comment, String operatorUserId) throws Exception {
 		Exchange ex = hdao.getEntity(Exchange.class, exchangeId);
@@ -344,13 +347,29 @@ public class ExchangeServiceImpl implements ExchangeService {
 			for(ExchangeDetail ed:edList){
 				ed.setC_status(ExConstants.EXCHANGE_STATUS_SUBMITTED_10);
 				Patient0 p = ed.getPatient();
-				if(ed.getC_sw()>0 || ed.getC_cy()>0){
+				System.out.println(ed.getC_jsonstr());
+				JSONObject jsonstr = JSONObject.fromObject(ed.getC_jsonstr());
+				if(ed.getC_sw()>0){
 					//死亡 或 出院 关闭状态
+					if(jsonstr != null){
+						p.setC_swsj(sdf.parse(jsonstr.getString("c_swsj")));
+						p.setC_swyy(jsonstr.getString("c_swyy"));
+						p.setC_qjcs(jsonstr.getString("c_qjcs"));
+					}		
+					p.setC_gbbz(1);
+				}else if(ed.getC_cy()>0){
+					if(jsonstr != null){
+						p.setC_cysj(sdf.parse(jsonstr.getString("c_cysj")));
+						p.setC_bmid(jsonstr.getString("c_cylx"));
+					}
 					p.setC_gbbz(1);
 				}else if(ed.getC_zc()>0){
 					//转出 清空部门ID
+					if(jsonstr != null){
+						p.setC_zrrq(jsonstr.getString("c_zrrq"));
+						p.setC_bmid(jsonstr.getString("c_bmid"));
+					}
 					p.setC_ybmid(p.getC_bmid());
-					p.setC_bmid("");
 				}else{
 					p.setC_zbhsid(operatorUserId);
 					List usernameList = hdao.querySql(GET_USERNAME_BY_USERID_SQL, operatorUserId);
@@ -514,5 +533,19 @@ public class ExchangeServiceImpl implements ExchangeService {
 	public List<Department> getOtherDeptList(String dept_code) {
 		String hql = "from Department d where d.deptId != ?";
 		return hdao.queryHql(hql,dept_code);
+	}
+
+	@Override
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	public Integer deleteDraftExchangeByCreator(String exchangeId, String userId) throws Exception {
+		// TODO Auto-generated method stub
+		String sql1 = "delete from t_detail_info where c_exch_id=?";
+		String sql2 = "delete from t_exchange where c_exch_id=? and (c_status = '00' or c_status='11') and c_jbhsid=?";
+		hdao.executeSql(sql1, exchangeId);
+		Integer ret = (Integer)hdao.executeSql(sql2, exchangeId, userId);
+		if(ret==0){
+			throw new RuntimeException("非法操作，交班状态或已改变");
+		}
+		return ret;
 	}
 }

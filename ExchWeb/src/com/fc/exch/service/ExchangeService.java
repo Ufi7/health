@@ -57,4 +57,6 @@ public interface ExchangeService {
 	public List<Exchange> getRecentDraftExchangeByUser(String userId)throws ParseException;
 	
 	public List<Department> getOtherDeptList(String dept_code);
+	
+	public Integer deleteDraftExchangeByCreator(String exchangeId, String userId)throws Exception ;
 }
