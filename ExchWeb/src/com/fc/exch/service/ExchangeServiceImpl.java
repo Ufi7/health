@@ -345,9 +345,8 @@ public class ExchangeServiceImpl implements ExchangeService {
 		if(ExConstants.EXCHANGE_STATUS_FINALIZED_11.equals(targetStatus) ){
 			List<ExchangeDetail> edList = getExchangeDetailListByExchangeId(exchangeId);
 			for(ExchangeDetail ed:edList){
-				ed.setC_status(ExConstants.EXCHANGE_STATUS_SUBMITTED_10);
+				ed.setC_status(ExConstants.EXCHANGE_STATUS_FINALIZED_11);
 				Patient0 p = ed.getPatient();
-				System.out.println(ed.getC_jsonstr());
 				JSONObject jsonstr = JSONObject.fromObject(ed.getC_jsonstr());
 				if(ed.getC_sw()>0){
 					//死亡 或 出院 关闭状态
@@ -409,7 +408,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 //		List edList = hdao.querySql(sql, p.getPatientId());
 		
 		String hql = "From ExchangeDetailWithDate ed where ed.c_zyh = ? and ed.c_exch_id.c_status=? ORDER BY ed.c_exch_id.c_jbrq DESC";
-		List edList = hdao.queryHql(hql, p.getC_zyh(), ExConstants.EXCHANGE_STATUS_SUBMITTED_10);
+		List edList = hdao.queryHql(hql, p.getC_zyh(), ExConstants.EXCHANGE_STATUS_FINALIZED_11);
 		
 		Map retMap = new HashMap();
 		retMap.put("patient", p);
@@ -447,7 +446,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 		String hql2 = "From ExchangeDetailWithDate ed where ed.c_zyh = ? and ed.c_exch_id.c_status=? ORDER BY ed.c_exch_id.c_jbrq DESC";
 		Query q = hdao.getSession().createQuery(hql2);
 		q.setParameter(0, p.getC_zyh());
-		q.setParameter(1, ExConstants.EXCHANGE_STATUS_SUBMITTED_10);
+		q.setParameter(1, ExConstants.EXCHANGE_STATUS_FINALIZED_11);
 		q.setMaxResults(1);
 		List<ExchangeDetailWithDate> list1 = q.list();
 		if(list1.size()>0){
