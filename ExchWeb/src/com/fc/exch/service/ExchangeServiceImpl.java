@@ -140,7 +140,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 					newList.add(newEmptyExchangeDetail(ex.getExchangeId(), p, deptCode));
 				}else{
 					if((date.getTime()/(1000*60*60*24)) > (exdd.getC_exch_id().getC_jbrq().getTime()/(1000*60*60*24))){
-						newList.add(this.cloneHistoryExchangeDetail(exdd, ex.getExchangeId()));
+						newList.add(this.cloneHistoryExchangeDetail(exdd, ex.getExchangeId(),deptCode));
 					}else{
 						//skip, records already in another exchange
 						continue;
@@ -241,7 +241,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 		if(exdd == null){
 			newed = newEmptyExchangeDetail(exchangeId,  p,  c_dept_code);
 		}else{
-			newed = cloneHistoryExchangeDetail(exdd, exchangeId);
+			newed = cloneHistoryExchangeDetail(exdd, exchangeId, c_dept_code);
 		}
 		return (ExchangeDetail)hdao.saveEntity(newed);
 	}
@@ -262,7 +262,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 				"count(if(c_hldj=1,1,null)) as c_hldj1,  "+
 				"count(if(c_ssbr>0,1,null)) as c_ssbr,  "+
 				"count(if(c_nssbr>0,1,null)) as c_nssbr,  "+
-				"count(if(c_qfyj>0,1,null)) as c_qfyj,  "+
+				"count(if(c_qfyj&&!c_yblx>0,1,null)) as c_qfyj,  "+
 				"count(if(c_zdtt>0,1,null)) as c_zdtt,  "+
 				"count(if(c_gcjlgj>0,1,null)) as c_gcjlgj,  "+
 				"count(if(c_tsjc>0,1,null)) as c_tsjc,  "+
@@ -272,8 +272,10 @@ public class ExchangeServiceImpl implements ExchangeService {
 				"count(if(c_sjmzg>0,1,null)) as c_sjmzg,  "+
 				"count(if(c_wjzbg>0,1,null)) as c_wjzbg,  "+
 				"count(if(c_dcnyx>0,1,null)) as c_dcnyx,  "+
-				"count(if(c_blsj>0,1,null)) as c_blsj "+
-				"from t_detail_info where c_exch_id =?) as statis "+
+				"count(if(c_blsj>0,1,null)) as c_blsj, "+
+				"count(if(c_qzwxwc&&c_yblx>0, 1, null)) as c_qzwxwc_sb, "+
+				"count(if(c_qzwxwc&&!c_yblx>0, 1, null)) as c_qzwxwc_zf "+
+				"from t_detail_info d, t_patient p where d.c_zyh = p.c_zyh and c_exch_id =?) as statis "+
 				"set ex.c_xybrs=statis. c1, "+
 				"ex.c_yybrs=statis.c2, "+
 				"ex.c_xrybr=statis.c_xry, "+
@@ -296,7 +298,9 @@ public class ExchangeServiceImpl implements ExchangeService {
 				"ex.c_sjmzg=statis.c_sjmzg, "+
 				"ex.c_wjzbg=statis.c_wjzbg, "+
 				"ex.c_dcnyx=statis.c_dcnyx, "+
-				"ex.c_blsj=statis.c_blsj "+
+				"ex.c_blsj=statis.c_blsj, "+
+				"ex.c_qzwxwc_sb=statis.c_qzwxwc_sb, "+
+				"ex.c_qzwxwc_zf=statis.c_qzwxwc_zf "+
 				"where c_exch_id=?; ";
 		return hdao.executeSql(sql, exchangeId, exchangeId);
 	}
@@ -473,7 +477,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 		}
 	}
 	
-	private ExchangeDetail cloneHistoryExchangeDetail(ExchangeDetailWithDate exdd, String newExchangeId){
+	private ExchangeDetail cloneHistoryExchangeDetail(ExchangeDetailWithDate exdd, String newExchangeId, String dept_code){
 		ExchangeDetail newexd =   (ExchangeDetail)hdao.getEntity(ExchangeDetail.class, exdd.getExchangeDetailId()).clone();
 		newexd.setC_insert_time(new Date());
 		if(newexd.getC_zr()>0){
@@ -481,6 +485,10 @@ public class ExchangeServiceImpl implements ExchangeService {
 		}
 		if(newexd.getC_xry()>0){
 			newexd.setC_xry(0);
+		}
+		if(!newexd.getC_dept_code().equals(dept_code)){
+			newexd.setC_zr(1);
+			newexd.setC_dept_code(dept_code);
 		}
 		newexd.setC_exch_id(newExchangeId);
 		newexd.setExchangeDetailId(UUID.randomUUID().toString());

@@ -397,7 +397,7 @@ public class ExchangeController {
 		String targetStatus = map.get("targetStatus");
 		String comment = map.get("comment");
 		Object obj =  exchangeService.exStatusUpdate(exchangeId, targetStatus, comment, ui.getUserSysId());
-		System.out.println(obj);
+		//System.out.println(obj);
 		return obj;
 	}
 	
@@ -424,7 +424,10 @@ public class ExchangeController {
 	@RequestMapping(value="exchangedetailitem/{exchangeDetailId}.do",method=RequestMethod.GET)
 	@ResponseBody
 	public ExchangeDetail getExhcnageDetailItem(@PathVariable("exchangeDetailId") String exchangeDetailId){
-		return exchangeService.getExchangeDetailListByExchangeDetailId(exchangeDetailId);
+		ExchangeDetail ed = exchangeService.getExchangeDetailListByExchangeDetailId(exchangeDetailId);
+		//refresh statis
+		//new RefreshExchangeStatisThread(exchangeService, ed.getC_exch_id()).start(); 
+		return ed;
 	}
 	
 	private int converStringToInt(String input){

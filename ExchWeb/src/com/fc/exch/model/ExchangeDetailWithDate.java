@@ -20,11 +20,11 @@ public class ExchangeDetailWithDate implements Cloneable{
 		this.exchangeDetailId = exchangeDetailId;
 	}
 
-	public ExchangeWithDateOnly getC_exch_id() {
+	public Exchange getC_exch_id() {
 		return c_exch_id;
 	}
 
-	public void setC_exch_id(ExchangeWithDateOnly c_exch_id) {
+	public void setC_exch_id(Exchange c_exch_id) {
 		this.c_exch_id = c_exch_id;
 	}
 
@@ -344,9 +344,9 @@ public class ExchangeDetailWithDate implements Cloneable{
 
 
 	//@Column(name="c_exch_id")
-	@ManyToOne(targetEntity = ExchangeWithDateOnly.class )
+	@ManyToOne(targetEntity = Exchange.class )
 	@JoinColumn(name="c_exch_id", referencedColumnName="c_exch_id")
-    private ExchangeWithDateOnly c_exch_id;
+    private Exchange c_exch_id;
 	
 	
 	
@@ -469,6 +469,17 @@ public class ExchangeDetailWithDate implements Cloneable{
 	@Column(name="c_insert_time")
 	private Date c_insert_time;
 	
+	@Column(name="c_jsonstr")
+	private String c_jsonstr;
+	
+	public String getC_jsonstr() {
+		return c_jsonstr;
+	}
+
+	public void setC_jsonstr(String c_jsonstr) {
+		this.c_jsonstr = c_jsonstr;
+	}
+
 	@Override  
     public Object clone() {  
 		ExchangeDetailWithDate exdd = null;  
