@@ -506,7 +506,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 		}else{
 			throw new Exception("非法操作！字段名不正确！");
 		}
-		String sql = "update t_exchange set "+ role +" = (SELECT c_user_name FROM health_data.t_user where c_user_id = ?), "+ roleid +" = ? " +
+		String sql = "update t_exchange set "+ role +" = (SELECT c_user_name FROM t_user where c_user_id = ?), "+ roleid +" = ? " +
 						"where c_exch_id = ? and (c_status='00' or c_status='01')";
 		return (Integer)hdao.executeSql(sql, userId, userId, exchangeId);
 	}
@@ -540,7 +540,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 	public Integer deleteDraftExchangeByCreator(String exchangeId, String userId) throws Exception {
 		// TODO Auto-generated method stub
 		String sql1 = "delete from t_detail_info where c_exch_id=?";
-		String sql2 = "delete from t_exchange where c_exch_id=? and (c_status = '00' or c_status='11') and c_jbhsid=?";
+		String sql2 = "delete from t_exchange where c_exch_id=? and (c_status = '00' or c_status='01') and c_jbhsid=?";
 		hdao.executeSql(sql1, exchangeId);
 		Integer ret = (Integer)hdao.executeSql(sql2, exchangeId, userId);
 		if(ret==0){
