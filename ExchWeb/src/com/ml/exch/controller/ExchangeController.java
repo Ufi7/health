@@ -396,9 +396,7 @@ public class ExchangeController {
 		UserInfo ui  = (UserInfo)request.getSession().getAttribute(SysConstant.USERINFO_ALIAS);
 		String targetStatus = map.get("targetStatus");
 		String comment = map.get("comment");
-		Object obj =  exchangeService.exStatusUpdate(exchangeId, targetStatus, comment, ui.getUserSysId());
-		//System.out.println(obj);
-		return obj;
+		return exchangeService.exStatusUpdate(exchangeId, targetStatus, comment, ui.getUserSysId());
 	}
 	
 	

@@ -132,8 +132,8 @@ public class ExchangeServiceImpl implements ExchangeService {
 			
 			//to add patient which belongs to operator
 			//list patient 1st
-			String hql1 = "From Patient0 p where p.c_zbhsid = ? and p.c_gbbz=0";
-			List<Patient0> list = hdao.queryHql(hql1, jbhsid1);
+			String hql1 = "From Patient0 p where p.c_zbhsid = ? and p.c_gbbz=0 and p.c_bmid=?";
+			List<Patient0> list = hdao.queryHql(hql1, jbhsid1, deptCode);
 			for(Patient0 p:list){
 				ExchangeDetailWithDate exdd = loadHistoryExchangeDetail(p);
 				if(exdd == null){
@@ -312,38 +312,52 @@ public class ExchangeServiceImpl implements ExchangeService {
 	private final static String SQL_EXCHANGE_STATUS_UPDATE_SQL_4 = "UPDATE t_exchange set c_status = ? where c_status != ?  and c_exch_id = ?";
 	
 	private final static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+	private final static SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd");
 	@Override
+	@Transactional
 	public Object exStatusUpdate(String exchangeId, String targetStatus, String comment, String operatorUserId) throws Exception {
 		Exchange ex = hdao.getEntity(Exchange.class, exchangeId);
-		Object retObj = null;
+		
+		//validate conflict
+		if(ExConstants.EXCHANGE_STATUS_SUBMITTED_10.equals(targetStatus) || ExConstants.EXCHANGE_STATUS_FINALIZED_11.equals(targetStatus) ){
+		List<Patient0> conflictList =  getConflictPatientList(ex);
+			if(conflictList.size()!=0){
+				Map errRetMap = new HashMap();
+				errRetMap.put("code", "error");
+				errRetMap.put("conflictList", conflictList);
+				return errRetMap;
+			}
+		}
+		
+		Object sqlUpdateCounter = null;
 		if( (ExConstants.EXCHANGE_STATUS_DRAFT_00.equals(ex.getC_status()) || ExConstants.EXCHANGE_STATUS_DRAWBACK_01.equals(ex.getC_status())) && ExConstants.EXCHANGE_STATUS_SUBMITTED_10.equals(targetStatus) && ex.getC_jbhsid().equals(operatorUserId) ){
 			//for submit case
 			//ex.setC_status(ExConstants.EXCHANGE_STATUS_SUBMITTED_10);
-			retObj = hdao.executeSql(SQL_EXCHANGE_STATUS_UPDATE_SQL_1, ExConstants.EXCHANGE_STATUS_SUBMITTED_10, ExConstants.EXCHANGE_STATUS_DRAFT_00, ExConstants.EXCHANGE_STATUS_DRAWBACK_01, operatorUserId, exchangeId);
+			sqlUpdateCounter = hdao.executeSql(SQL_EXCHANGE_STATUS_UPDATE_SQL_1, ExConstants.EXCHANGE_STATUS_SUBMITTED_10, ExConstants.EXCHANGE_STATUS_DRAFT_00, ExConstants.EXCHANGE_STATUS_DRAWBACK_01, operatorUserId, exchangeId);
 			
 		}else if(ExConstants.EXCHANGE_STATUS_SUBMITTED_10.equals(ex.getC_status()) && ExConstants.EXCHANGE_STATUS_DRAWBACK_01.equals(targetStatus) && (ex.getC_jbhsid().equals(operatorUserId) ||ex.getC_jbhsid2().equals(operatorUserId))){
 			//for drawback case
 			//ex.setC_status(ExConstants.EXCHANGE_STATUS_DRAWBACK_01);
-			retObj = hdao.executeSql(SQL_EXCHANGE_STATUS_UPDATE_SQL_2, ExConstants.EXCHANGE_STATUS_DRAWBACK_01, ExConstants.EXCHANGE_STATUS_SUBMITTED_10, operatorUserId, operatorUserId, exchangeId);
+			sqlUpdateCounter = hdao.executeSql(SQL_EXCHANGE_STATUS_UPDATE_SQL_2, ExConstants.EXCHANGE_STATUS_DRAWBACK_01, ExConstants.EXCHANGE_STATUS_SUBMITTED_10, operatorUserId, operatorUserId, exchangeId);
 			//TODO: handle comments
 			
 		}else if(ExConstants.EXCHANGE_STATUS_SUBMITTED_10.equals(ex.getC_status()) && ExConstants.EXCHANGE_STATUS_FINALIZED_11.equals(targetStatus)  && ex.getC_jbhsid2().equals(operatorUserId)){
 			//for accept case
 			//ex.setC_status(ExConstants.EXCHANGE_STATUS_FINALIZED_11);
-			retObj = hdao.executeSql(SQL_EXCHANGE_STATUS_UPDATE_SQL_3, ExConstants.EXCHANGE_STATUS_FINALIZED_11, ExConstants.EXCHANGE_STATUS_SUBMITTED_10, operatorUserId, exchangeId);
+			sqlUpdateCounter = hdao.executeSql(SQL_EXCHANGE_STATUS_UPDATE_SQL_3, ExConstants.EXCHANGE_STATUS_FINALIZED_11, ExConstants.EXCHANGE_STATUS_SUBMITTED_10, operatorUserId, exchangeId);
 			//TODO: update patient status。。。。
 			
 		}else if(!ExConstants.EXCHANGE_STATUS_FINALIZED_11.equals(ex.getC_status()) && ExConstants.EXCHANGE_STATUS_INVALID_90.equals(targetStatus)){
 			//for system to invalid expired ex case
 			//ex.setC_status(ExConstants.EXCHANGE_STATUS_INVALID_90);
-			retObj = hdao.executeSql(SQL_EXCHANGE_STATUS_UPDATE_SQL_4, ExConstants.EXCHANGE_STATUS_INVALID_90, ExConstants.EXCHANGE_STATUS_FINALIZED_11, operatorUserId, exchangeId);
+			sqlUpdateCounter = hdao.executeSql(SQL_EXCHANGE_STATUS_UPDATE_SQL_4, ExConstants.EXCHANGE_STATUS_INVALID_90, ExConstants.EXCHANGE_STATUS_FINALIZED_11, operatorUserId, exchangeId);
 		}else{
-			throw new Exception("Invalid Operation...无效操作...validation fail");
+			throw new RuntimeException("Invalid Operation...无效操作...validation fail");
 		}
 		
-		Integer i = (Integer) retObj;
+		Integer i = (Integer) sqlUpdateCounter;
 		if(i==0){
-			throw new Exception("Invalid Operation...无效操作...对应交班信息状态或以改变，请尝试刷新后重新操作！");
+			throw new RuntimeException("Invalid Operation...无效操作...对应交班信息状态或以改变，请尝试刷新后重新操作！");
 		}
 		
 		if(ExConstants.EXCHANGE_STATUS_FINALIZED_11.equals(targetStatus) ){
@@ -389,8 +403,9 @@ public class ExchangeServiceImpl implements ExchangeService {
 				hdao.saveEntity(ed);
 			}
 		}
-		
-		return retObj;
+		Map retMap = new HashMap();
+		retMap.put("code", "success");
+		return retMap;
 	}
 
 	@Override
@@ -516,7 +531,7 @@ public class ExchangeServiceImpl implements ExchangeService {
 		}else if("c_jbysid2".equals(roleid)){
 			role = "c_jbys2";
 		}else{
-			throw new Exception("非法操作！字段名不正确！");
+			throw new RuntimeException("非法操作！字段名不正确！");
 		}
 		String sql = "update t_exchange set "+ role +" = (SELECT c_user_name FROM t_user where c_user_id = ?), "+ roleid +" = ? " +
 						"where c_exch_id = ? and (c_status='00' or c_status='01')";
@@ -559,5 +574,29 @@ public class ExchangeServiceImpl implements ExchangeService {
 			throw new RuntimeException("非法操作，交班状态或已改变");
 		}
 		return ret;
+	}
+	
+	public List<ExchangeDetailWithDate> getExchagneDetailListByDateAndDeptCode(Date exDate, String deptCode){
+		String hql = "From ExchangeDetailWithDate ed where ed.c_exch_id.c_jbrq=? and ed.c_exch_id.c_status=? and ed.c_exch_id.c_dept_code=?";
+		return hdao.queryHql(hql, exDate, ExConstants.EXCHANGE_STATUS_FINALIZED_11, deptCode);
+	}
+	
+	
+	public List<Patient0> getConflictPatientList(Exchange ex){
+		List<ExchangeDetail> edList = getExchangeDetailListByExchangeId(ex.getExchangeId());
+		List<ExchangeDetailWithDate> finalizedEdList = getExchagneDetailListByDateAndDeptCode(ex.getC_jbrq(), ex.getC_dept_code());
+		List<Patient0> conflictList = new ArrayList();
+		for(int i=0; i<edList.size();i++){
+			Patient0 pa = edList.get(i).getPatient();
+			String azyh = pa.getC_zyh();
+			for(int n=0; n<finalizedEdList.size();n++){
+				String bzyh = finalizedEdList.get(n).getC_zyh();
+				if(azyh.equals(bzyh)){
+					conflictList.add(pa);
+					break;
+				}
+			}
+		}
+		return conflictList;
 	}
 }
