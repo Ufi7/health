@@ -351,7 +351,12 @@ public class ExchangeServiceImpl implements ExchangeService {
 			for(ExchangeDetail ed:edList){
 				ed.setC_status(ExConstants.EXCHANGE_STATUS_FINALIZED_11);
 				Patient0 p = ed.getPatient();
-				JSONObject jsonstr = JSONObject.fromObject(ed.getC_jsonstr());
+				JSONObject jsonstr = null;
+				try{
+					jsonstr = JSONObject.fromObject(ed.getC_jsonstr());
+				}catch(Exception e){
+					jsonstr = null;
+				}
 				if(ed.getC_sw()>0){
 					//死亡 或 出院 关闭状态
 					if(jsonstr != null){
